@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Practicals Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the top */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff; /* White background for the main container */
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            padding: 30px;
+            max-width: 900px; /* Max width for larger screens */
+            width: 100%;
+            margin-top: 20px; /* Margin from the top */
+        }
+        h1, h2 {
+            color: #2c3e50; /* Dark blue-gray for headings */
+            font-weight: 700;
+        }
+        label {
+            color: #34495e; /* Slightly lighter dark blue-gray for labels */
+            font-weight: 500;
+        }
+        input[type="number"], select {
+            border: 1px solid #cbd5e0; /* Light gray border */
+            border-radius: 8px; /* Rounded corners for inputs */
+            padding: 10px 15px;
+            font-size: 1rem;
+            color: #2c3e50;
+            transition: border-color 0.3s ease;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue border on focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Soft blue shadow on focus */
+        }
+        button {
+            background-color: #3b82f6; /* Blue button */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+        .result-box, .error-box {
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .result-box {
+            background-color: #ecfdf5; /* Light green for success */
+            border: 1px solid #10b981; /* Green border */
+            color: #065f46; /* Dark green text */
+        }
+        .error-box {
+            background-color: #fee2e2; /* Light red for errors */
+            border: 1px solid #ef4444; /* Red border */
+            color: #b91c1c; /* Dark red text */
+        }
+        .error-box ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        .info-box {
+            background-color: #e0f2fe; /* Light blue for info */
+            border: 1px solid #38b2ac; /* Teal border */
+            color: #083344; /* Dark teal text */
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container flex flex-col gap-8">
+        <h1 class="text-3xl text-center mb-4">Chemistry Practicals Simulator</h1>
+
+        <div class="info-box">
+            <h2 class="text-xl font-semibold mb-2">Acid-Base Titration Simulation</h2>
+            <p>
+                In this practical, you will simulate determining the concentration of an unknown hydrochloric acid (HCl) solution using a standard sodium hydroxide (NaOH) solution.
+            </p>
+            <p class="mt-2">
+                <strong>Reaction:</strong> $HCl(aq) + NaOH(aq) \rightarrow NaCl(aq) + H_2O(l)$
+            </p>
+            <p class="mt-2">
+                The stoichiometry is 1:1, meaning 1 mole of HCl reacts with 1 mole of NaOH.
+            </p>
+        </div>
+
+        <div class="practical-section">
+            <h2 class="text-2xl mb-4">Experiment Setup</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-2">
+                    <label for="acidVolume" class="block text-sm">Volume of HCl (acid) taken (mL):</label>
+                    <input type="number" id="acidVolume" value="25.0" step="0.1" class="w-full">
+                    <p class="text-xs text-gray-500">Typical pipette volume: 20.0 mL or 25.0 mL</p>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="baseConcentration" class="block text-sm">Concentration of NaOH (standard base) (mol/L):</label>
+                    <input type="number" id="baseConcentration" value="0.100" step="0.001" class="w-full">
+                    <p class="text-xs text-gray-500">Example: 0.100 mol/L</p>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="baseVolumeUsed" class="block text-sm">Volume of NaOH (base) used (mL):</label>
+                    <input type="number" id="baseVolumeUsed" placeholder="Enter burette reading" step="0.1" class="w-full">
+                    <p class="text-xs text-gray-500">This is your titre value.</p>
+                </div>
+            </div>
+
+            <button onclick="calculateConcentration()" class="mt-8 w-full md:w-auto">Calculate Concentration</button>
+        </div>
+
+        <div id="resultsSection" class="hidden practical-section">
+            <h2 class="text-2xl mb-4">Results</h2>
+            <div id="output" class="result-box hidden"></div>
+            <div id="errors" class="error-box hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // Function to display messages in a custom modal-like box instead of alert()
+        function showMessageBox(message, type = 'info') {
+            const container = document.querySelector('.container');
+            let messageBox = document.getElementById('customMessageBox');
+
+            if (!messageBox) {
+                messageBox = document.createElement('div');
+                messageBox.id = 'customMessageBox';
+                messageBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50';
+                messageBox.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                        <p id="messageBoxText" class="text-lg mb-4"></p>
+                        <button onclick="document.getElementById('customMessageBox').classList.add('hidden')"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            OK
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(messageBox);
+            }
+
+            const messageBoxText = document.getElementById('messageBoxText');
+            messageBoxText.textContent = message;
+
+            // Apply different styles based on message type
+            const contentBox = messageBox.querySelector('div');
+            contentBox.className = 'bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center'; // Reset classes
+            if (type === 'error') {
+                contentBox.classList.add('border', 'border-red-500', 'text-red-700');
+            } else if (type === 'success') {
+                contentBox.classList.add('border', 'border-green-500', 'text-green-700');
+            } else {
+                contentBox.classList.add('border', 'border-gray-300', 'text-gray-900');
+            }
+
+            messageBox.classList.remove('hidden');
+        }
+
+
+        function calculateConcentration() {
+            const acidVolumeInput = document.getElementById('acidVolume');
+            const baseConcentrationInput = document.getElementById('baseConcentration');
+            const baseVolumeUsedInput = document.getElementById('baseVolumeUsed');
+            const outputDiv = document.getElementById('output');
+            const errorsDiv = document.getElementById('errors');
+            const resultsSection = document.getElementById('resultsSection');
+
+            // Hide previous results/errors
+            outputDiv.classList.add('hidden');
+            errorsDiv.classList.add('hidden');
+            resultsSection.classList.remove('hidden'); // Ensure results section is visible
+
+            let errors = [];
+
+            // Get values and convert to numbers
+            const acidVolume = parseFloat(acidVolumeInput.value);
+            const baseConcentration = parseFloat(baseConcentrationInput.value);
+            const baseVolumeUsed = parseFloat(baseVolumeUsedInput.value);
+
+            // --- Input Validation ---
+            if (isNaN(acidVolume) || acidVolume <= 0) {
+                errors.push("Invalid acid volume. Please enter a positive number (e.g., 25.0).");
+            }
+            if (isNaN(baseConcentration) || baseConcentration <= 0) {
+                errors.push("Invalid base concentration. Please enter a positive number (e.g., 0.100).");
+            }
+            if (isNaN(baseVolumeUsed) || baseVolumeUsed <= 0) {
+                errors.push("Invalid base volume used. Please enter a positive number (your titre value).");
+            }
+
+            if (errors.length > 0) {
+                displayErrors(errors);
+                return;
+            }
+
+            // --- Simulate Correct Values (for comparison) ---
+            // Let's assume the 'true' concentration of the acid is 0.08 mol/L for this simulation
+            // And calculate the 'true' base volume that would be needed if the acid was 0.08 M
+            const trueAcidConcentration = 0.08; // mol/L
+            const expectedBaseVolumeUsed = (trueAcidConcentration * acidVolume) / baseConcentration; // in mL
+
+            // --- Calculation ---
+            // Convert volumes from mL to L for calculation
+            const acidVolumeL = acidVolume / 1000;
+            const baseVolumeUsedL = baseVolumeUsed / 1000;
+
+            const molesOfBase = baseConcentration * baseVolumeUsedL;
+            // Assuming 1:1 stoichiometry for HCl and NaOH
+            const molesOfAcid = molesOfBase;
+            const calculatedAcidConcentration = molesOfAcid / acidVolumeL;
+
+            // --- Error Identification and Reasons ---
+            const tolerance = 0.005; // A small tolerance for 'correct' results (e.g., within 0.005 mol/L)
+
+            // Round calculated and expected values for comparison and display
+            const roundedCalculatedConcentration = calculatedAcidConcentration.toFixed(3);
+            const roundedExpectedConcentration = trueAcidConcentration.toFixed(3);
+            const roundedBaseVolumeUsed = baseVolumeUsed.toFixed(2);
+            const roundedExpectedBaseVolumeUsed = expectedBaseVolumeUsed.toFixed(2);
+
+            let resultMessage = `<h3>Your Calculated Results:</h3>`;
+            resultMessage += `<p>Moles of NaOH used: ${molesOfBase.toExponential(2)} mol</p>`;
+            resultMessage += `<p>Moles of HCl reacted: ${molesOfAcid.toExponential(2)} mol</p>`;
+            resultMessage += `<p>Concentration of HCl: <strong>${roundedCalculatedConcentration} mol/L</strong></p>`;
+
+            // Check if the calculated concentration is close to the 'true' concentration
+            if (Math.abs(calculatedAcidConcentration - trueAcidConcentration) < tolerance) {
+                resultMessage += `<p class="mt-4 text-green-700 font-semibold">Great job! Your calculated concentration of HCl (${roundedCalculatedConcentration} mol/L) is correct!</p>`;
+                outputDiv.innerHTML = resultMessage;
+                outputDiv.classList.remove('hidden');
+                outputDiv.classList.add('result-box');
+                outputDiv.classList.remove('error-box'); // Ensure it's not red if it was before
+            } else {
+                errors.push(`Your calculated HCl concentration (${roundedCalculatedConcentration} mol/L) is incorrect.`);
+                errors.push(`The expected HCl concentration for this setup is approximately ${roundedExpectedConcentration} mol/L.`);
+
+                // Provide reasons for errors
+                if (Math.abs(baseVolumeUsed - expectedBaseVolumeUsed) > 0.5) { // If titre value is significantly off
+                    errors.push(`<strong>Reason:</strong> Your titre value (${roundedBaseVolumeUsed} mL) is significantly different from the expected titre (${roundedExpectedBaseVolumeUsed} mL) for the given acid volume and base concentration. This suggests a possible error in your burette reading or experimental technique.`);
+                } else if (Math.abs(acidVolume - 25.0) > 0.1 && Math.abs(acidVolume - 20.0) > 0.1) {
+                    errors.push(`<strong>Reason:</strong> While not necessarily an error, your chosen acid volume (${acidVolume} mL) is unusual. Standard pipette volumes are typically 20.0 mL or 25.0 mL. Ensure you used the correct pipette.`);
+                } else if (Math.abs(baseConcentration - 0.100) > 0.005) {
+                    errors.push(`<strong>Reason:</strong> Your standard base concentration (${baseConcentration} mol/L) might be inaccurate or not the intended value for this practical. Double-check the concentration of your standard solution.`);
+                } else {
+                    errors.push(`<strong>Reason:</strong> The discrepancy might be due to small errors in measurement, calculation, or the precision of your input values. Review your steps carefully.`);
+                }
+
+                outputDiv.innerHTML = resultMessage; // Still show the calculated result
+                displayErrors(errors);
+            }
+        }
+
+        function displayErrors(errorsArray) {
+            const errorsDiv = document.getElementById('errors');
+            errorsDiv.innerHTML = `<h3>Errors Found:</h3><ul>${errorsArray.map(err => `<li>${err}</li>`).join('')}</ul>`;
+            errorsDiv.classList.remove('hidden');
+            errorsDiv.classList.add('error-box');
+            document.getElementById('output').classList.remove('result-box'); // Remove green styling
+        }
+    </script>
+</body>
+</html>
